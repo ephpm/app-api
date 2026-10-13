@@ -28,12 +28,17 @@
             "url": "https://github.com/sponsors/yiisoft"
         }
     ],
+    "repositories": [
+        {"type": "git", "url": "https://github.com/ephpm/psr15-worker.git"},
+        {"type": "git", "url": "https://github.com/ephpm/php-worker.git"}
+    ],
     "require": {
         "php": "8.2 - 8.5",
         "ext-filter": "*",
         "ext-pdo": "*",
         "amphp/http-server": "3.4.6",
         "amphp/socket": "^2.4",
+        "ephpm/psr15-worker": "^0.1",
         "evenement/evenement": "^3.0",
         "fig/http-message-util": "^1.1",
         "httpsoft/http-message": "^1.1.6",

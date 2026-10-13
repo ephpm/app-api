@@ -1,0 +1,29 @@
+# ePHPm in its default per-request mode: every request runs a full PHP request cycle on a fixed pool
+# of 20 dedicated PHP threads and bootstraps Yii through public/index.php, like PHP-FPM.
+[server]
+listen = "0.0.0.0:8080"
+document_root = "/app/public"
+
+[server.request]
+max_body_size = 8388608          # 8 MiB, like the other runtimes
+
+[server.timeouts]
+request = 60                     # outer deadline; above max_execution_time (30) plus queue wait
+
+[server.logging]
+access = ""                      # access logging off (the default, stated for clarity)
+
+[php]
+mode = "per_request"
+concurrency = 20
+max_execution_time = 30
+php_memory_limit = "256M"        # php_memory_limit wins over the autotuned value; memory_limit alone does not
+memory_limit = "256M"
+ini_file = "/etc/ephpm/php.ini"  # php.ini-production + docker/runtimes/php-production.ini
+opcache_validate_timestamps = false
+opcache_memory_consumption = 256
+opcache_interned_strings_buffer = 32
+opcache_max_accelerated_files = 20000
+opcache_jit = "disable"
+realpath_cache_size = "4096K"
+realpath_cache_ttl = 600

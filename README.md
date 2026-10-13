@@ -29,6 +29,8 @@ the combined report is saved as `results/report.html`. The earlier 200-connectio
 | `frankenphp-worker` | FrankenPHP | A persistent Yii worker |
 | `oxphp-classic` | OxPHP | A normal PHP application bootstrap for each request |
 | `oxphp-worker` | OxPHP | A persistent Yii worker with per-request state reset |
+| `ephpm-classic` | ePHPm | A normal PHP application bootstrap for each request (`[php] mode = "per_request"`) |
+| `ephpm-worker` | ePHPm | A persistent Yii worker with per-request state reset (`[php] mode = "worker"`) |
 | `apache-mod-php` | Apache + mod_php | A normal PHP application bootstrap in each prefork process |
 | `reactphp` | ReactPHP HTTP | A persistent Yii worker using the Event loop |
 | `amphp` | Amp HTTP Server | A persistent Yii worker using Revolt’s Event driver |
@@ -54,7 +56,7 @@ The runtime configs use a production-oriented benchmark baseline:
   for web and CLI SAPIs, JIT is disabled, errors go to stderr, and PHP memory is limited to 256 MiB.
 - OPcache timestamp validation is disabled. **Restart the runtime after changing PHP files**, including
   files in the mounted source tree. The benchmark suite rebuilds and restarts each runtime automatically.
-- FPM, FreeUnit, Rapira, OxPHP, Swoole, Workerman, ReactPHP, Amp, Apache and FrankenPHP workers recycle after 10,000 requests; RoadRunner uses its
+- FPM, FreeUnit, Rapira, OxPHP, ePHPm (worker mode only), Swoole, Workerman, ReactPHP, Amp, Apache and FrankenPHP workers recycle after 10,000 requests; RoadRunner uses its
   memory supervisor. API body limits are 8 MiB, and request/queue timeouts are configured where supported.
 - HTTP readiness checks gate benchmark startup. Containers have a 45-second shutdown grace period,
   bounded Docker logs, and an increased open-file limit. Nginx access logging is disabled to match the
@@ -86,6 +88,7 @@ Server releases checked on 2026-09-22 are pinned in the benchmark Dockerfile and
 | FreeUnit | [1.37.0](https://docs.freeunit.org/news/2026/unit-1.37.0-released/) (updated 2026-10-05) |
 | Rapira (all modes) | [Nightly for PHP 8.5](https://rapira.rs/docs/intro/installation) (`nightly-php8.5`) |
 | OxPHP (both modes) | [0.12.0](https://github.com/oxphp/oxphp/releases/tag/v0.12.0) (added 2026-10-02) |
+| ePHPm (both modes) | [v0.11.3 with PHP 8.5.7](https://github.com/ephpm/ephpm/releases/tag/v0.11.3), image `ephpm/ephpm:v0.11.3-php8.5` (added 2026-10-12). The other runtimes use PHP 8.5.11; ePHPm embeds its own PHP, so this row differs until a release built on the 8.5.11 SDK exists. Change `EPHPM_IMAGE` in `docker/runtimes/Dockerfile` to move to it. |
 | Nginx | [1.31.6 (mainline)](https://nginx.org/en/download.html) |
 | PostgreSQL | [18.6](https://www.postgresql.org/support/versioning/) |
 | Valkey | [9.1.2](https://github.com/valkey-io/valkey/releases/tag/9.1.2) |
@@ -248,6 +251,33 @@ schedules worker recycling after 10,000 requests. Both modes use 20 PHP workers 
 PHP settings. Access logging is disabled. OxPHP reports the `cli-server` SAPI, so the front controller
 excludes its extension from PHP's built-in development-server routing.
 
+Run both ePHPm modes through both endpoints:
+
+```shell
+make bench-all RUNTIMES="ephpm-classic ephpm-worker"
+```
+
+[ePHPm](https://github.com/ephpm/ephpm) embeds PHP in a single Rust binary, so both modes run the
+`ephpm/ephpm` release image (`EPHPM_IMAGE` in `docker/runtimes/Dockerfile`) instead of the shared
+`php:8.5.11` image. The image ships `mbstring`, `intl`, `pdo_pgsql` and OPcache; no extension is installed.
+Each mode has a config in `docker/runtimes/ephpm-classic.toml` or `ephpm-worker.toml`, and the shared
+`php.ini-production` plus `docker/runtimes/php-production.ini` are loaded through `[php] ini_file`. The
+memory limit, OPcache and realpath cache values are also set as explicit `[php]` keys because ePHPm writes
+them after `ini_file` and would otherwise autotune them.
+
+- `ephpm-classic` uses the default `[php] mode = "per_request"` and runs `public/index.php` on 20 dedicated
+  PHP threads (`[php] concurrency = 20`). Per-request mode has no request-count recycling, so unlike the
+  other classic runtimes there is no 10,000-request recycle.
+- `ephpm-worker` uses `[php] mode = "worker"` with 20 workers that each boot Yii once in
+  `worker-ephpm.php`, recycled after 10,000 requests (`[php.worker] max_requests`). The worker uses the
+  [ephpm/psr15-worker](https://github.com/ephpm/psr15-worker) package to turn each ePHPm request into a
+  PSR-7 request and send the PSR-7 response, then resets container state like the other worker entry points.
+  The package is installed from its GitHub repository (it is not on Packagist), which is why `composer.json`
+  has `repositories` entries. The worker script must live under ePHPm's `document_root`, so worker mode
+  serves from `/app` rather than `/app/public`; no benchmarked route maps to a file there.
+- Both modes use ePHPm's default response compression, comparable to the FrankenPHP Caddyfile's `encode`.
+  Access logging is disabled (the default).
+
 Run a subset of runtimes through both endpoints:
 
 ```shell
@@ -280,7 +310,7 @@ The default mode is `ramp`. Configuration is passed as Make variables or environ
 | Variable | Default | Meaning |
 | --- | --- | --- |
 | `RUNTIME` | `frankenphp-classic` | Runtime used by `make bench` and `make bench-db` |
-| `RUNTIMES` | all fifteen runtimes | Space-separated runtimes used by `make bench-all` |
+| `RUNTIMES` | all seventeen runtimes | Space-separated runtimes used by `make bench-all` |
 | `TARGETS` | `home postgres-orders` | Space-separated endpoint keys for the suite script |
 | `MODE` | `ramp` | `steady` for one rate or `ramp` for sequential rate stages |
 | `RATE` | `10000` | Requests per second in steady mode |
@@ -346,6 +376,7 @@ tools/run-wrkx-benchmark.sh     one endpoint/stage benchmark runner
 tools/compile-wrkx-results.php  wrkx output normalization
 tools/render-benchmark-report.* HTML report generator
 worker-oxphp.php                OxPHP persistent worker entry point
+worker-ephpm.php                ePHPm persistent worker entry point
 worker-frankenphp.php           FrankenPHP persistent worker entry point
 worker-roadrunner.php           RoadRunner persistent worker entry point
 worker-swoole.php               Swoole persistent worker entry point

@@ -1,0 +1,36 @@
+# ePHPm persistent worker mode: 20 worker threads boot Yii once (worker-ephpm.php) and loop over
+# requests, recycling each worker after 10,000 requests.
+[server]
+listen = "0.0.0.0:8080"
+# The worker script must resolve under document_root, so this is the application root rather than
+# public/. Every PHP-bound request goes to the worker; no Yii route maps to a file on disk.
+document_root = "/app"
+
+[server.request]
+max_body_size = 8388608
+
+[server.timeouts]
+request = 60
+
+[server.logging]
+access = ""
+
+[php]
+mode = "worker"
+concurrency = 20
+max_execution_time = 30
+php_memory_limit = "256M"
+memory_limit = "256M"
+ini_file = "/etc/ephpm/php.ini"
+opcache_validate_timestamps = false
+opcache_memory_consumption = 256
+opcache_interned_strings_buffer = 32
+opcache_max_accelerated_files = 20000
+opcache_jit = "disable"
+realpath_cache_size = "4096K"
+realpath_cache_ttl = 600
+
+[php.worker]
+script = "worker-ephpm.php"
+max_requests = 10000
+populate_superglobals = false

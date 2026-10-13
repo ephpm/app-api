@@ -267,6 +267,36 @@ services:
     env_file: [dev/.env]
     depends_on: {postgres: {condition: service_healthy}, valkey: {condition: service_healthy}}
 
+  ephpm-classic:
+    <<: *runtime
+    healthcheck:
+      <<: *http-health
+      test: ["CMD", "ephpm", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:8080/') === false ? 1 : 0);"]
+    profiles: [ephpm-classic]
+    build:
+      context: ..
+      dockerfile: docker/runtimes/Dockerfile
+      target: ephpm-classic
+    ports: ["9991:8080"]
+    volumes: ["../:/app"]
+    env_file: [dev/.env]
+    depends_on: {postgres: {condition: service_healthy}, valkey: {condition: service_healthy}}
+
+  ephpm-worker:
+    <<: *runtime
+    healthcheck:
+      <<: *http-health
+      test: ["CMD", "ephpm", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:8080/') === false ? 1 : 0);"]
+    profiles: [ephpm-worker]
+    build:
+      context: ..
+      dockerfile: docker/runtimes/Dockerfile
+      target: ephpm-worker
+    ports: ["9991:8080"]
+    volumes: ["../:/app"]
+    env_file: [dev/.env]
+    depends_on: {postgres: {condition: service_healthy}, valkey: {condition: service_healthy}}
+
   valkey:
     <<: *runtime
     image: valkey/valkey:9.1.2-alpine

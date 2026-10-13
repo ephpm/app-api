@@ -15,6 +15,7 @@ return (new Configuration())
     ->addPathToScan($root . '/config', isDev: false)
     ->addPathToScan($root . '/public/index.php', isDev: false)
     ->addPathToScan($root . '/yii', isDev: false)
+    ->addPathToScan($root . '/worker-ephpm.php', isDev: false)
     ->addPathToScan($root . '/tests', isDev: true)
     ->ignoreErrorsOnPackages(
         ['yiisoft/di', 'yiisoft/data'],

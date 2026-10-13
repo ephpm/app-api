@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 COMPOSE_FILE="$ROOT_DIR/docker/benchmarks.compose.yml"
-RUNTIMES="${RUNTIMES:-frankenphp-classic frankenphp-worker roadrunner roadrunner-v3 php-fpm freeunit rapira rapira-classic rapira-dispatcher oxphp-classic oxphp-worker swoole apache-mod-php workerman reactphp amphp}"
+RUNTIMES="${RUNTIMES:-frankenphp-classic frankenphp-worker roadrunner roadrunner-v3 php-fpm freeunit rapira rapira-classic rapira-dispatcher oxphp-classic oxphp-worker swoole apache-mod-php workerman reactphp amphp ephpm-classic ephpm-worker}"
 TARGETS="${TARGETS:-home postgres-orders}"
 OUTPUT_ROOT="${OUTPUT_ROOT:-$ROOT_DIR/runtime/benchmarks/$(date -u +%Y%m%dT%H%M%SZ)-suite}"
 

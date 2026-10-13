@@ -1,3 +1,9 @@
+# ePHPm release image used by the ephpm-classic and ephpm-worker runtimes. This is the single place
+# to change the ePHPm version. Release images are tagged v<ePHPm version>-php<minor>;
+# v0.11.3-php8.5 embeds PHP 8.5.7, not the 8.5.11 used by the other runtimes. Override for one build
+# with --build-arg EPHPM_IMAGE=docker.io/ephpm/ephpm:<tag>.
+ARG EPHPM_IMAGE=docker.io/ephpm/ephpm:v0.11.3-php8.5
+
 FROM composer/composer:2-bin AS composer
 FROM ghcr.io/mlocati/php-extension-installer:2 AS php-extension-installer
 FROM ghcr.io/roadrunner-server/roadrunner:2025.1.15 AS roadrunner-bin
@@ -210,3 +216,20 @@ RUN cp "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 COPY docker/runtimes/php-production.ini /usr/local/etc/php/conf.d/zz-production.ini
 WORKDIR /app
 CMD ["rapira", "serve", "docker/runtimes/rapira.toml"]
+
+# ePHPm embeds PHP in its own binary, so it cannot reuse the shared php:8.5.11 image. The official
+# image supplies php.ini-production; ePHPm loads the result through [php] ini_file.
+FROM php:8.5.11-cli-bookworm AS php-ini-source
+
+FROM ${EPHPM_IMAGE} AS ephpm-base
+COPY --from=php-ini-source /usr/local/etc/php/php.ini-production /tmp/php.ini-production
+COPY docker/runtimes/php-production.ini /tmp/php-production.ini
+RUN cat /tmp/php.ini-production /tmp/php-production.ini > /etc/ephpm/php.ini \
+    && rm /tmp/php.ini-production /tmp/php-production.ini
+WORKDIR /app
+
+FROM ephpm-base AS ephpm-classic
+COPY docker/runtimes/ephpm-classic.toml /etc/ephpm/ephpm.toml
+
+FROM ephpm-base AS ephpm-worker
+COPY docker/runtimes/ephpm-worker.toml /etc/ephpm/ephpm.toml

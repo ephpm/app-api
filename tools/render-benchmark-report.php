@@ -779,7 +779,7 @@ function parseDockerStats(string $dockerStatsFile): array
         $service = (string) ($record['service'] ?? 'unknown');
         $service = match ($service) {
             'frankenphp-classic', 'frankenphp-worker', 'roadrunner', 'roadrunner-v3',
-            'php', 'nginx', 'freeunit', 'rapira', 'rapira-classic', 'rapira-dispatcher', 'oxphp-classic', 'oxphp-worker', 'swoole', 'apache-mod-php', 'workerman', 'reactphp', 'amphp' => 'app',
+            'php', 'nginx', 'freeunit', 'rapira', 'rapira-classic', 'rapira-dispatcher', 'oxphp-classic', 'oxphp-worker', 'swoole', 'apache-mod-php', 'workerman', 'reactphp', 'amphp', 'ephpm-classic', 'ephpm-worker' => 'app',
             default => $service,
         };
         $second = max(0, (int) floor($timestamp - $firstTimestamp));
@@ -817,6 +817,7 @@ function buildRunPalette(array $runs): array
         'Rapira worker' => '#a000c8',
         'Rapira dispatcher' => '#0078c8',
         'OxPHP worker' => '#6b4c00',
+        'ePHPm worker' => '#e07b00',
         'Swoole' => '#000000',
         'Workerman' => '#000077',
         'ReactPHP' => '#002200',
@@ -827,12 +828,14 @@ function buildRunPalette(array $runs): array
         'Rapira classic' => '#3b2c85',
         'FreeUnit' => '#007d34',
         'OxPHP classic' => '#5666de',
+        'ePHPm classic' => '#1b9e77',
         'FrankenPHP worker DB' => '#737b89',
         'RoadRunner v2025 DB' => '#222222',
         'RoadRunner v3 DB' => '#770088',
         'Rapira worker DB' => '#d95700',
         'Rapira dispatcher DB' => '#a50021',
         'OxPHP worker DB' => '#00538a',
+        'ePHPm worker DB' => '#b35f00',
         'Swoole DB' => '#6600ff',
         'Workerman DB' => '#ff11ee',
         'ReactPHP DB' => '#000001',
@@ -843,6 +846,7 @@ function buildRunPalette(array $runs): array
         'Rapira classic DB' => '#806000',
         'FreeUnit DB' => '#008a91',
         'OxPHP classic DB' => '#004d43',
+        'ePHPm classic DB' => '#136f55',
     ];
 
     // Optional runtimes get the most distant available color instead of wrapping the palette.
@@ -960,10 +964,10 @@ function renderHtmlReport(array $runs): string
     $palette = buildRunPalette($runs);
     $allRuns = $runs;
     $groups = [
-        'worker-home' => ['Worker no DB', false, ['FrankenPHP worker', 'RoadRunner v2025', 'RoadRunner v3', 'Rapira worker', 'Rapira dispatcher', 'OxPHP worker', 'Swoole', 'Workerman', 'ReactPHP', 'Amp']],
-        'worker-db' => ['Worker DB', true, ['FrankenPHP worker', 'RoadRunner v2025', 'RoadRunner v3', 'Rapira worker', 'Rapira dispatcher', 'OxPHP worker', 'Swoole', 'Workerman', 'ReactPHP', 'Amp']],
-        'non-worker-home' => ['Non-worker no DB', false, ['FrankenPHP classic', 'PHP-FPM + Nginx', 'Rapira classic', 'FreeUnit', 'OxPHP classic', 'Apache + mod_php']],
-        'non-worker-db' => ['Non-worker DB', true, ['FrankenPHP classic', 'PHP-FPM + Nginx', 'Rapira classic', 'FreeUnit', 'OxPHP classic', 'Apache + mod_php']],
+        'worker-home' => ['Worker no DB', false, ['FrankenPHP worker', 'RoadRunner v2025', 'RoadRunner v3', 'Rapira worker', 'Rapira dispatcher', 'OxPHP worker', 'ePHPm worker', 'Swoole', 'Workerman', 'ReactPHP', 'Amp']],
+        'worker-db' => ['Worker DB', true, ['FrankenPHP worker', 'RoadRunner v2025', 'RoadRunner v3', 'Rapira worker', 'Rapira dispatcher', 'OxPHP worker', 'ePHPm worker', 'Swoole', 'Workerman', 'ReactPHP', 'Amp']],
+        'non-worker-home' => ['Non-worker no DB', false, ['FrankenPHP classic', 'PHP-FPM + Nginx', 'Rapira classic', 'FreeUnit', 'OxPHP classic', 'ePHPm classic', 'Apache + mod_php']],
+        'non-worker-db' => ['Non-worker DB', true, ['FrankenPHP classic', 'PHP-FPM + Nginx', 'Rapira classic', 'FreeUnit', 'OxPHP classic', 'ePHPm classic', 'Apache + mod_php']],
     ];
     $chartDefinitions = [];
     $included = [];
