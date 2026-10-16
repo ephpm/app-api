@@ -1,8 +1,8 @@
 # ePHPm release image used by the ephpm-classic and ephpm-worker runtimes. This is the single place
 # to change the ePHPm version. Release images are tagged v<ePHPm version>-php<minor>;
-# v0.11.3-php8.5 embeds PHP 8.5.7, not the 8.5.11 used by the other runtimes. Override for one build
+# v0.12.0-php8.5 embeds PHP 8.5.11, the same as the other runtimes. Override for one build
 # with --build-arg EPHPM_IMAGE=docker.io/ephpm/ephpm:<tag>.
-ARG EPHPM_IMAGE=docker.io/ephpm/ephpm:v0.11.3-php8.5
+ARG EPHPM_IMAGE=docker.io/ephpm/ephpm:v0.12.0-php8.5
 
 FROM composer/composer:2-bin AS composer
 FROM ghcr.io/mlocati/php-extension-installer:2 AS php-extension-installer

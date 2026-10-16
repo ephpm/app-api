@@ -88,7 +88,7 @@ Server releases checked on 2026-09-22 are pinned in the benchmark Dockerfile and
 | FreeUnit | [1.37.0](https://docs.freeunit.org/news/2026/unit-1.37.0-released/) (updated 2026-10-05) |
 | Rapira (all modes) | [Nightly for PHP 8.5](https://rapira.rs/docs/intro/installation) (`nightly-php8.5`) |
 | OxPHP (both modes) | [0.12.0](https://github.com/oxphp/oxphp/releases/tag/v0.12.0) (added 2026-10-02) |
-| ePHPm (both modes) | [v0.11.3 with PHP 8.5.7](https://github.com/ephpm/ephpm/releases/tag/v0.11.3), image `ephpm/ephpm:v0.11.3-php8.5` (added 2026-10-12). The other runtimes use PHP 8.5.11; ePHPm embeds its own PHP, so this row differs until a release built on the 8.5.11 SDK exists. Change `EPHPM_IMAGE` in `docker/runtimes/Dockerfile` to move to it. |
+| ePHPm (both modes) | [v0.12.0 with PHP 8.5.11](https://github.com/ephpm/ephpm/releases/tag/v0.12.0), image `ephpm/ephpm:v0.12.0-php8.5` (updated 2026-10-16). Change `EPHPM_IMAGE` in `docker/runtimes/Dockerfile` to move to another release. |
 | Nginx | [1.31.6 (mainline)](https://nginx.org/en/download.html) |
 | PostgreSQL | [18.6](https://www.postgresql.org/support/versioning/) |
 | Valkey | [9.1.2](https://github.com/valkey-io/valkey/releases/tag/9.1.2) |
